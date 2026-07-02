@@ -1,0 +1,27 @@
+# =============================================================================
+#  Git — Configuracion global
+#  Delta como pager para diffs con colores lado a lado
+# =============================================================================
+
+# Credenciales — GitHub CLI (gh auth)
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential
+
+# Delta — diffs con syntax highlighting y vista lado a lado
+[core]
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true        # n/N para navegar entre cambios
+	side-by-side = true    # vista lado a lado
+
+[merge]
+	conflictStyle = diff3  # muestra base + ambos lados en conflictos

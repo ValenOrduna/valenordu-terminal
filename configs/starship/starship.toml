@@ -1,0 +1,39 @@
+# =============================================================================
+#  Starship — Configuracion del prompt
+#  Muestra: carpeta actual, rama git, estado de git, simbolo final
+# =============================================================================
+
+format = """$directory$git_branch$git_status$character"""
+add_newline = false
+
+# Simbolo final del prompt (púrpura = exito, rojo = error)
+[character]
+success_symbol = "[❯](purple)"
+error_symbol = "[❯](red)"
+
+# Carpeta actual (cian, max 3 niveles, recorta al root del repo)
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = true
+
+# Rama de git (púrpura con icono de branch)
+[git_branch]
+symbol = " "
+style = "bold purple"
+format = "[$symbol$branch]($style) "
+
+# Estado de git (amarillo)
+# Simbolos: = conflicto | ↑ ahead | ↓ behind | ↕ diverged | ? untracked
+#           $ stashed | ! modified | + staged
+[git_status]
+style = "bold yellow"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "="
+ahead = "↑"
+behind = "↓"
+diverged = "↕"
+untracked = "?"
+stashed = "$"
+modified = "!"
+staged = "+"

@@ -1,0 +1,34 @@
+# =============================================================================
+#  Ghostty — Configuracion
+#  Terminal emulator moderno con GPU rendering
+# =============================================================================
+
+# Fuente — Maple Mono NF (redondeada, con Nerd Font para iconos)
+font-family = Maple Mono NF
+font-size = 15
+
+# Ventana — padding y transparencia
+window-padding-x = 12
+window-padding-y = 8
+window-decoration = false
+background-opacity = 0.92
+background-blur-radius = 20
+
+# Keybindings — recarga de config
+keybind = cmd+r=text:\x12
+
+# Seleccionar hasta inicio / fin de linea
+keybind = cmd+shift+left=text:\x1b[1;2H
+keybind = cmd+shift+right=text:\x1b[1;2F
+
+# Seleccionar palabra por palabra
+keybind = opt+shift+left=text:\x1b[1;6D
+keybind = opt+shift+right=text:\x1b[1;6C
+
+# Cmd+Z = deshacer | Cmd+Shift+Z = rehacer
+keybind = cmd+z=text:\x1f
+keybind = cmd+shift+z=text:\x1br
+
+# Navegacion de pestaas
+keybind = cmd+opt+left=previous_tab
+keybind = cmd+opt+right=next_tab
