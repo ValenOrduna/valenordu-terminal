@@ -10,7 +10,13 @@ CONFIGS_DIR="$SCRIPT_DIR/../configs"
 PLUGINS_DIR="$SCRIPT_DIR/../plugins"
 
 # ponytail: backup automático antes de pisar configs existentes
-backup_if_exists() { [ -f "$1" ] && cp "$1" "$1.bak.$(date +%s)" && echo "  Backup: $1.bak"; }
+# Devuelve 0 aunque el archivo no exista: con set -e, un `return 1` aca
+# abortaba el installer en silencio en una maquina limpia.
+backup_if_exists() {
+  [ -f "$1" ] || return 0
+  cp "$1" "$1.bak.$(date +%s)"
+  echo "  Backup: $1.bak"
+}
 
 echo "  [1/5] Verificando Homebrew..."
 if ! command -v brew &>/dev/null; then
@@ -40,7 +46,13 @@ BREW_PACKAGES=(
   gh                 # GitHub CLI
   jq                 # procesar JSON en terminal
 )
-brew install "${BREW_PACKAGES[@]}"
+# Si una formula falla, reintentamos una por una para no perder el resto
+brew install "${BREW_PACKAGES[@]}" || {
+  echo "  Alguna formula fallo, reintentando de a una..."
+  for pkg in "${BREW_PACKAGES[@]}"; do
+    brew install "$pkg" || echo "  $pkg fallo, continuando..."
+  done
+}
 
 echo "  [3/5] Instalando Ghostty y la fuente Maple Mono NF..."
 brew install --cask ghostty 2>/dev/null || echo "  Ghostty ya instalado o no disponible, continuando..."
@@ -82,7 +94,24 @@ cp "$CONFIGS_DIR/git/gitconfig" ~/.gitconfig
 # Plugin zsh-shift-select
 cp -r "$PLUGINS_DIR/zsh-shift-select" ~/.config/zsh/
 
-echo "  [5/5] Listo!"
+echo "  [5/5] Verificando instalacion..."
+
+faltan=""
+for t in starship eza bat delta fzf zoxide fastfetch figlet lazygit gh jq; do
+  command -v "$t" &>/dev/null || faltan="$faltan $t"
+done
+for f in ~/.zshrc ~/.gitconfig ~/.config/starship.toml ~/.config/fastfetch/config.jsonc; do
+  [ -f "$f" ] || faltan="$faltan $f"
+done
+
+if [ -n "$faltan" ]; then
+  echo ""
+  echo "  ATENCION — falto instalar o copiar:$faltan"
+  echo "  Volve a correr el installer o instalalo a mano."
+else
+  echo "  Todo instalado y copiado correctamente."
+fi
+
 echo ""
 echo "  Reinicia tu terminal (o Ghostty) para ver los cambios."
 echo "  Si zsh no es tu shell por defecto: chsh -s \$(which zsh)"

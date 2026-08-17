@@ -10,7 +10,13 @@ CONFIGS_DIR="$SCRIPT_DIR/../configs"
 PLUGINS_DIR="$SCRIPT_DIR/../plugins"
 
 # ponytail: backup automático antes de pisar configs existentes
-backup_if_exists() { [ -f "$1" ] && cp "$1" "$1.bak.$(date +%s)" && echo "  Backup: $1.bak"; }
+# Devuelve 0 aunque el archivo no exista: con set -e, un `return 1` aca
+# abortaba el installer en silencio en una maquina limpia.
+backup_if_exists() {
+  [ -f "$1" ] || return 0
+  cp "$1" "$1.bak.$(date +%s)"
+  echo "  Backup: $1.bak"
+}
 
 echo "  [1/5] Detectando gestor de paquetes..."
 
@@ -140,7 +146,24 @@ cp "$CONFIGS_DIR/git/gitconfig" ~/.gitconfig
 # Plugin zsh-shift-select
 cp -r "$PLUGINS_DIR/zsh-shift-select" ~/.config/zsh/
 
-echo "  Listo!"
+echo "  Verificando instalacion..."
+
+faltan=""
+for t in starship eza bat delta fzf zoxide fastfetch figlet lazygit jq; do
+  command -v "$t" &>/dev/null || faltan="$faltan $t"
+done
+for f in ~/.zshrc ~/.gitconfig ~/.config/starship.toml ~/.config/fastfetch/config.jsonc; do
+  [ -f "$f" ] || faltan="$faltan $f"
+done
+
+if [ -n "$faltan" ]; then
+  echo ""
+  echo "  ATENCION — falto instalar o copiar:$faltan"
+  echo "  Volve a correr el installer o instalalo a mano."
+else
+  echo "  Todo instalado y copiado correctamente."
+fi
+
 echo ""
 echo "  Reinicia tu terminal para ver los cambios."
 echo "  Si zsh no es tu shell por defecto: chsh -s \$(which zsh)"
