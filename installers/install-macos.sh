@@ -16,7 +16,11 @@ echo "  [1/5] Verificando Homebrew..."
 if ! command -v brew &>/dev/null; then
   echo "  Instalando Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  # Apple Silicon instala en /opt/homebrew, Intel en /usr/local
+  for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
+  done
+  command -v brew &>/dev/null || { echo "  No se encontro brew tras instalarlo. Abri una terminal nueva y volve a correr el installer."; exit 1; }
 fi
 
 echo "  [2/5] Instalando herramientas..."
