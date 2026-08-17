@@ -38,7 +38,8 @@ BREW_PACKAGES=(
 )
 brew install "${BREW_PACKAGES[@]}"
 
-echo "  [3/5] Instalando fuente Maple Mono NF..."
+echo "  [3/5] Instalando Ghostty y la fuente Maple Mono NF..."
+brew install --cask ghostty 2>/dev/null || echo "  Ghostty ya instalado o no disponible, continuando..."
 brew install --cask font-maple-mono-nf 2>/dev/null || echo "  Fuente ya instalada o no disponible, continuando..."
 
 echo "  [4/5] Copiando configuraciones..."

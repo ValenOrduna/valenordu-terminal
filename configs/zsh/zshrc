@@ -18,7 +18,14 @@ alias cl="claude"          # Claude CLI
 alias co="codex"           # Codex CLI
 alias op="opencode"        # Opencode CLI
 
-# Git
+# Git — accesos directos para el flujo diario
+alias gs="git status"
+alias gc="git commit"
+alias gp="git push"
+alias gd="git diff"
+alias gco="git checkout"
+alias gb="git branch"
+alias gl="git log --oneline --graph --decorate -20"
 alias lg="lazygit"         # TUI para git (ramas, commits, diffs, stash)
 
 # eza — reemplazo de ls con colores, iconos y estado de git por archivo
@@ -33,12 +40,25 @@ alias cat="bat --paging=never"
 # Delta como pager de git (diffs con colores lado a lado)
 export GIT_PAGER="delta"
 
+# Navegacion rapida
+alias ..="cd .."
+alias ...="cd ../.."
+mkcd() { mkdir -p "$1" && cd "$1"; }
+
+# Utilidades
+alias ports="lsof -i -P -n | grep LISTEN"
+alias path="echo \$PATH | tr ':' '\n'"
+alias myip="curl -s ifconfig.me"
+
+# SitioHoy — bootstrap del toolkit
+alias sitiohoy="curl -fsSL https://raw.githubusercontent.com/Sitio-Hoy-Tech/skills-sitiohoy/main/bootstrap.sh -o /tmp/sitiohoy.sh && bash /tmp/sitiohoy.sh"
+
 # -----------------------------------------------------------------------------
 # Inicializacion de herramientas
 # -----------------------------------------------------------------------------
 
-# zoxide — cd inteligente, recuerda directorios frecuentes (usar: z <dir>)
-eval "$(zoxide init zsh)"
+# zoxide — cd inteligente, recuerda directorios frecuentes (usar: cd <dir>)
+eval "$(zoxide init zsh --cmd cd)"
 
 # starship — prompt que muestra rama git, estado, lenguaje, etc.
 eval "$(starship init zsh)"
@@ -52,14 +72,24 @@ autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
+# Carga un plugin buscandolo en las rutas de brew (macOS) o del sistema (Linux)
+zsh_plugin() {
+  local p
+  for p in /opt/homebrew/share/$1/$1.zsh /usr/local/share/$1/$1.zsh \
+           /usr/share/$1/$1.zsh "$HOME/.$1/$1.zsh"; do
+    [[ -r $p ]] && { source "$p"; return; }
+  done
+}
+
 # Sugerencias en gris segun tu historial (aceptas con ->)
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+zsh_plugin zsh-autosuggestions
 
 # Ctrl+R = busqueda difusa de comandos anteriores | Ctrl+T = buscar archivos
 source <(fzf --zsh)
+export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
 
 # Resaltado de sintaxis (verde = ok, rojo = error). SIEMPRE al final del archivo.
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+zsh_plugin zsh-syntax-highlighting
 
 # -----------------------------------------------------------------------------
 # Keybindings

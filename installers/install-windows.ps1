@@ -38,6 +38,10 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 # -----------------------------------------------------------------------------
 Write-Host "  [2/5] Instalando herramientas..."
 
+# lazygit vive en el bucket "extras" y la fuente en "nerd-fonts"
+scoop bucket add extras 2>$null | Out-Null
+scoop bucket add nerd-fonts 2>$null | Out-Null
+
 $scoopPackages = @(
     "git",           # Git
     "starship",      # Prompt con rama git
@@ -55,8 +59,14 @@ $scoopPackages = @(
 
 foreach ($pkg in $scoopPackages) {
     Write-Host "    Instalando $pkg..."
-    scoop install $pkg 2>$null | Out-Null
+    try { scoop install $pkg 2>$null | Out-Null }
+    catch { Write-Host "    $pkg fallo o ya estaba instalado, continuando..." }
 }
+
+# Fuente Maple Mono NF — necesaria para los iconos de eza y starship
+Write-Host "    Instalando fuente Maple Mono NF..."
+try { scoop install Maple-Mono-NF 2>$null | Out-Null }
+catch { Write-Host "    Fuente no instalada, bajala de https://github.com/subframe7536/Maple-font/releases" }
 
 # -----------------------------------------------------------------------------
 # [3/5] Configurar PowerShell (PSReadLine para autocompletado)
@@ -76,7 +86,7 @@ $HomeDir = $env:USERPROFILE
 $ConfigDir = Join-Path $HomeDir ".config"
 New-Item -ItemType Directory -Force -Path $ConfigDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $ConfigDir "fastfetch") | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $ConfigDir "starship") | Out-Null
+
 
 # Fastfetch
 Backup-IfExists (Join-Path $ConfigDir "fastfetch\config.jsonc")
@@ -84,9 +94,9 @@ Copy-Item (Join-Path $ConfigsDir "fastfetch\config.jsonc") (Join-Path $ConfigDir
 Backup-IfExists (Join-Path $ConfigDir "fastfetch\logo.txt")
 Copy-Item (Join-Path $ConfigsDir "fastfetch\logo.txt") (Join-Path $ConfigDir "fastfetch\logo.txt") -Force
 
-# Starship
-Backup-IfExists (Join-Path $ConfigDir "starship\starship.toml")
-Copy-Item (Join-Path $ConfigsDir "starship\starship.toml") (Join-Path $ConfigDir "starship\starship.toml") -Force
+# Starship — lee ~/.config/starship.toml (no una subcarpeta starship/)
+Backup-IfExists (Join-Path $ConfigDir "starship.toml")
+Copy-Item (Join-Path $ConfigsDir "starship\starship.toml") (Join-Path $ConfigDir "starship.toml") -Force
 
 # Git config
 Backup-IfExists (Join-Path $HomeDir ".gitconfig")
@@ -100,13 +110,15 @@ Write-Host "  [5/5] Creando perfil de PowerShell..."
 $ProfileDir = Split-Path -Parent $PROFILE
 New-Item -ItemType Directory -Force -Path $ProfileDir | Out-Null
 
-$PwshProfile = @"
+# Here-string literal (@' '@): sin interpolacion, asi $args y $env:PATH
+# quedan en el perfil en vez de expandirse al escribirlo.
+$PwshProfile = @'
 # =============================================================================
 #  ValenOrdu Terminal Setup — PowerShell Profile
 # =============================================================================
 
 # Inicializar herramientas
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
+Invoke-Expression (& { (zoxide init powershell --cmd cd | Out-String) })
 Invoke-Expression (& starship init powershell | Out-String)
 
 # Autocompletado con flechas (como zsh)
@@ -116,25 +128,50 @@ Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle ListView
 
-# Aliases
-Set-Alias -Name ls -Value eza -Force -Option AllScope
-Set-Alias -Name cat -Value bat -Force -Option AllScope
-Set-Alias -Name lg -Value lazygit -Force -Option AllScope
+# PowerShell resuelve alias antes que funciones: hay que sacar los built-in
+# (ls, cat, gc, gp, gl, gcm...) para que nuestras funciones tomen su lugar.
+foreach ($a in 'ls','cat','gc','gp','gl','gcb') {
+    Remove-Item "Alias:$a" -Force -ErrorAction SilentlyContinue
+}
 
-# eza con iconos y git
-function ll { eza -lh --icons --git --group-directories-first `$args }
-function la { eza -lah --icons --git --group-directories-first `$args }
-function lt { eza --tree --level=2 --icons --git `$args }
+# eza — reemplazo de ls con iconos y estado de git
+function ls { eza --icons --git --group-directories-first @args }
+function ll { eza -lh --icons --git --group-directories-first @args }
+function la { eza -lah --icons --git --group-directories-first @args }
+function lt { eza --tree --level=2 --icons --git @args }
+
+# bat — reemplazo de cat con syntax highlighting
+function cat { bat --paging=never @args }
+
+# Git
+function gs { git status @args }
+function gc { git commit @args }
+function gp { git push @args }
+function gd { git diff @args }
+function gco { git checkout @args }
+function gb { git branch @args }
+function gl { git log --oneline --graph --decorate -20 @args }
+function lg { lazygit @args }
+
+# Navegacion
+function .. { Set-Location .. }
+function ... { Set-Location ../.. }
+function mkcd { param($d) New-Item -ItemType Directory -Force -Path $d | Out-Null; Set-Location $d }
+
+# Utilidades
+function ports { netstat -ano | Select-String "LISTENING" }
+function path { $env:PATH -split ';' }
+function myip { (Invoke-WebRequest -Uri "https://ifconfig.me" -UseBasicParsing).Content }
 
 # ValenOrdu fetch
 function valenfetch {
     Clear-Host
-    figlet -f larry3d -w 300 "ValenOrdu" | ForEach-Object { Write-Host -ForegroundColor Magenta `$_ }
+    figlet -f larry3d -w 300 "ValenOrdu" | ForEach-Object { Write-Host -ForegroundColor Magenta $_ }
     Write-Host ""
     fastfetch --logo none
 }
 valenfetch
-"@
+'@
 
 Backup-IfExists $PROFILE
 Set-Content -Path $PROFILE -Value $PwshProfile -Force

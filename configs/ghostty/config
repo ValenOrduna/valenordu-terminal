@@ -6,13 +6,24 @@
 # Fuente — Maple Mono NF (redondeada, con Nerd Font para iconos)
 font-family = Maple Mono NF
 font-size = 15
+font-thicken = true
+
+# Cursor
+cursor-style = bar
+cursor-style-blink = false
 
 # Ventana — padding y transparencia
 window-padding-x = 12
 window-padding-y = 8
-window-decoration = false
+window-decoration = true
+window-save-state = always
 background-opacity = 0.92
 background-blur-radius = 20
+
+# UX
+copy-on-select = clipboard
+mouse-hide-while-typing = true
+confirm-close-surface = false
 
 # Keybindings — recarga de config
 keybind = cmd+r=text:\x12

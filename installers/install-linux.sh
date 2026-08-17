@@ -30,7 +30,7 @@ install_pkg() {
 }
 
 echo "  [2/5] Instalando herramientas base..."
-install_pkg zsh git curl
+install_pkg zsh git curl unzip
 
 echo "  [3/5] Instalando herramientas adicionales..."
 
@@ -57,8 +57,11 @@ if ! command -v fzf &>/dev/null; then
   ~/.fzf/install --all --no-bash --no-fish
 fi
 
-# bat
+# bat — en Debian/Ubuntu el binario se llama batcat, lo exponemos como bat
 install_pkg bat 2>/dev/null || cargo_install bat
+if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
+  mkdir -p ~/.local/bin && ln -sf "$(command -v batcat)" ~/.local/bin/bat
+fi
 
 # lazygit — descargar binario
 if ! command -v lazygit &>/dev/null; then
@@ -78,18 +81,30 @@ fi
 # figlet y jq
 install_pkg figlet jq 2>/dev/null || echo "  figlet/jq no disponibles, continuando..."
 
+# Fuente Maple Mono NF — necesaria para los iconos de eza y starship
+if [ ! -f ~/.local/share/fonts/MapleMono-NF-Regular.ttf ]; then
+  echo "  Instalando fuente Maple Mono NF..."
+  mkdir -p ~/.local/share/fonts
+  curl -fsSLo /tmp/maple.zip "https://github.com/subframe7536/Maple-font/releases/latest/download/MapleMono-NF-unhinted.zip" \
+    && unzip -oq /tmp/maple.zip -d ~/.local/share/fonts \
+    && fc-cache -f >/dev/null 2>&1 \
+    || echo "  No se pudo instalar la fuente, instalala a mano desde https://github.com/subframe7536/Maple-font/releases"
+fi
+
 # Plugins de zsh
 echo "  [4/5] Instalando plugins de zsh..."
 
-# zsh-autosuggestions
-if [ ! -d /usr/local/share/zsh-autosuggestions ] && [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]; then
-  git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh-autosuggestions
-fi
+# El .zshrc busca cada plugin en /usr/share, /usr/local/share y ~/.<nombre>.
+# Solo clonamos si el sistema no lo trae en ninguna de esas rutas.
+clone_plugin() {
+  for d in "/usr/share/$1" "/usr/local/share/$1" "$HOME/.$1"; do
+    [ -f "$d/$1.zsh" ] && { echo "  $1 ya presente en $d"; return; }
+  done
+  git clone --depth 1 "https://github.com/zsh-users/$1" "$HOME/.$1"
+}
 
-# zsh-syntax-highlighting
-if [ ! -d /usr/local/share/zsh-syntax-highlighting ] && [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting ]; then
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting ~/.zsh-syntax-highlighting
-fi
+clone_plugin zsh-autosuggestions
+clone_plugin zsh-syntax-highlighting
 
 echo "  [5/5] Copiando configuraciones..."
 
@@ -97,10 +112,6 @@ mkdir -p ~/.config/{fastfetch,starship,zsh}
 
 backup_if_exists ~/.zshrc
 cp "$CONFIGS_DIR/zsh/zshrc" ~/.zshrc
-
-# En Linux, ajustar las rutas de los plugins en .zshrc (brew no existe)
-sed -i 's|$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh|~/.zsh-autosuggestions/zsh-autosuggestions.zsh|g' ~/.zshrc
-sed -i 's|$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh|~/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh|g' ~/.zshrc
 
 # Ghostty (opcional — solo si esta instalado)
 if command -v ghostty &>/dev/null; then

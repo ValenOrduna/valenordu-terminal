@@ -29,22 +29,46 @@ Configuracion completa de terminal con Ghostty + zsh, lista para instalar en mac
 | Alias | Comando | Que hace |
 |-------|---------|----------|
 | `lg` | lazygit | TUI de git |
+| `gs` | git status | Estado del repo |
+| `gc` | git commit | Commit |
+| `gp` | git push | Push |
+| `gd` | git diff | Ver cambios |
+| `gco` | git checkout | Cambiar rama |
+| `gb` | git branch | Listar ramas |
+| `gl` | git log --oneline | Historial compacto |
 | `ls` | eza --icons --git | Listado con iconos |
 | `ll` | eza -lh | Listado largo |
 | `la` | eza -lah | Listado con ocultos |
 | `lt` | eza --tree | Arbol de directorios |
 | `cat` | bat | Cat con colores |
+| `..` | cd .. | Subir un nivel |
+| `...` | cd ../.. | Subir dos niveles |
 | `cl` | claude | Claude CLI |
 | `co` | codex | Codex CLI |
 | `op` | opencode | Opencode CLI |
+| `ports` | lsof -i -P -n | Ver puertos en uso |
+| `path` | echo $PATH | PATH legible |
+| `myip` | curl ifconfig.me | IP publica |
+| `sitiohoy` | — | Bootstrap del toolkit SitioHoy |
+
+### Funciones
+| Funcion | Que hace |
+|---------|----------|
+| `mkcd <dir>` | Crea directorio y entra |
+| `valenfetch` | Nombre 3D + system info |
 
 ### Fuente
 - **Maple Mono NF** — redondeada, moderna, con Nerd Font para iconos
 
 ### Config de Ghostty
-- Fuente Maple Mono NF size 15
+- Fuente Maple Mono NF size 15 con font-thicken (mejor render Retina)
+- Cursor bar sin parpadeo
 - Transparencia 92% + blur
 - Padding 12px x 8px
+- Copy-on-select al clipboard
+- Mouse se oculta al escribir
+- Cierre sin confirmacion
+- Ventanas recuerdan estado
 - Keybindings: Cmd+R reload, Cmd+Z undo, Cmd+Shift+Z redo, etc.
 
 ## Instalacion
@@ -73,6 +97,7 @@ powershell -ExecutionPolicy Bypass -File installers\install-windows.ps1
 ```
 valenordu-terminal/
 ├── README.md                  <- este archivo
+├── LICENSE                    <- MIT
 ├── install.sh                 <- installer universal (detecta OS)
 ├── configs/
 │   ├── ghostty/
@@ -95,7 +120,15 @@ valenordu-terminal/
 ```
 
 ## Notas
-- En macOS requiere Homebrew. Se instala automaticamente si no lo tenes.
-- En Linux detecta apt/dnf/pacman/zypper automaticamente.
-- En Windows usa Scoop y configura PowerShell (no zsh).
-- El installer hace backup automático de configs existentes antes de pisar (archivo.bak.<timestamp>).
+- **macOS** — requiere Homebrew (se instala solo si no lo tenes). Instala tambien Ghostty y la fuente Maple Mono NF.
+- **Linux** — detecta apt/dnf/pacman/zypper. Ghostty no se instala automaticamente: si lo tenes, la config se copia; si no, ese paso se saltea.
+- **Windows** — usa Scoop y configura **PowerShell, no zsh** (no hay Ghostty ni plugins de zsh). Los aliases y el prompt son equivalentes.
+- La fuente Maple Mono NF se instala en las tres plataformas. Despues de instalar hay que **seleccionarla en el terminal** (Ghostty ya viene configurado; en Windows Terminal se elige a mano en Settings > Appearance > Font face).
+- El installer hace backup automatico de tus configs existentes antes de pisarlas (`archivo.bak.<timestamp>`).
+- El `.zshrc` corre `valenfetch` al abrir cada terminal (limpia la pantalla y muestra el logo). Para desactivarlo, borra la ultima linea del archivo.
+
+## Creditos
+- [zsh-shift-select](https://github.com/jirutka/zsh-shift-select) — incluido en `plugins/` (licencia MIT, ver `plugins/zsh-shift-select/LICENSE`).
+
+## Licencia
+MIT — ver [LICENSE](LICENSE).
